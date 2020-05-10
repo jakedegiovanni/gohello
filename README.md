@@ -29,3 +29,7 @@ The default port of the app is 8080, if you want to change the port the app star
 ## Cleanup
 
 - Run `cleanup.sh` to clean your working directory.
+
+## Testing
+
+- Run `./test.sh` to run the tests inside the `cmd/` and `pkg/` directories.
