@@ -13,10 +13,13 @@ type genericResponse struct {
 }
 
 // Start ...
-func Start() {
+func Start(port int) {
 	http.HandleFunc("/helloworld", worldHandler)
-	fmt.Printf("Starting Server on port 8080\n")
-	http.ListenAndServe(":8080", nil)
+
+	fmt.Printf("Starting Server on port %d\n", port)
+
+	addr := fmt.Sprintf(":%d", port)
+	http.ListenAndServe(addr, nil)
 }
 
 func worldHandler(rw http.ResponseWriter, r *http.Request) {

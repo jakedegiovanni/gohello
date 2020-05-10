@@ -1,7 +1,14 @@
 package main
 
-import "github.com/jakedegiovanni/gohello/pkg/server"
+import (
+	"flag"
+
+	"github.com/jakedegiovanni/gohello/pkg/server"
+)
 
 func main() {
-	server.Start()
+	var portPtr *int = flag.Int("port", 8080, "Port to run the server on.")
+	flag.Parse()
+
+	server.Start(*portPtr)
 }
