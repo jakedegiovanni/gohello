@@ -3,6 +3,7 @@ package server
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/jakedegiovanni/gohello/pkg/world"
@@ -19,7 +20,7 @@ func Start(port int) {
 	fmt.Printf("Starting Server on port %d\n", port)
 
 	addr := fmt.Sprintf(":%d", port)
-	http.ListenAndServe(addr, nil)
+	log.Fatal(http.ListenAndServe(addr, nil))
 }
 
 func worldHandler(rw http.ResponseWriter, r *http.Request) {
@@ -34,7 +35,7 @@ func worldHandler(rw http.ResponseWriter, r *http.Request) {
 
 		json.NewEncoder(rw).Encode(jsonResp)
 	} else {
-		rw.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintf(rw, "%s Operations not support", r.Method)
+		rw.WriteHeader(http.StatusNotImplemented)
+		fmt.Fprintf(rw, "%s Operations not support on this endpoint", r.Method)
 	}
 }
