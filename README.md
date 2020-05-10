@@ -33,3 +33,9 @@ The default port of the app is 8080, if you want to change the port the app star
 ## Testing
 
 - Run `./test.sh` to run the tests inside the `cmd/` and `pkg/` directories.
+
+## TODO
+
+- Best practices around GO testing
+  - dependency isolation
+- idiomatic GO?

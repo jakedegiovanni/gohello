@@ -6,9 +6,23 @@ import (
 	"github.com/jakedegiovanni/gohello/pkg/server"
 )
 
-func main() {
-	var portPtr *int = flag.Int("port", 8080, "Port to run the server on.")
+var serverStart = server.Start
+
+var defaultPort = 8080
+
+type opts struct {
+	port int
+}
+
+var parseFlags = func() *opts {
+	var port int
+	flag.IntVar(&port, "port", defaultPort, "Port to run the server on.")
 	flag.Parse()
 
-	server.Start(*portPtr)
+	return &opts{port: port}
+}
+
+func main() {
+	opt := parseFlags()
+	serverStart(opt.port)
 }
