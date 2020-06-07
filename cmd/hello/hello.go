@@ -2,13 +2,12 @@ package main
 
 import (
 	"flag"
+	"log"
 
-	"github.com/jakedegiovanni/gohello/pkg/server"
+	"github.com/jakedegiovanni/gohello/internal/app"
 )
 
-var serverStart = server.Start
-
-var defaultPort = 8080
+const defaultPort = 8080
 
 type opts struct {
 	port int
@@ -24,5 +23,16 @@ var parseFlags = func() *opts {
 
 func main() {
 	opt := parseFlags()
-	serverStart(opt.port)
+
+	containers := app.MakeContainers()
+	builder := app.ServerBuilder()
+	server := app.App{
+		Port:       opt.port,
+		Containers: containers,
+		Builder:    builder,
+	}
+
+	if err := server.Start(); err != nil {
+		log.Fatal(err)
+	}
 }
