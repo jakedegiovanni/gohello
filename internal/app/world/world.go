@@ -16,7 +16,10 @@ const (
 	worldGreeting = "Hello, World."
 )
 
-var validPath = endpoint + `[a-z]{1,25}/?$`
+var (
+	validPath = endpoint + `[a-z]{1,25}/?$`
+	pathRE    = regexp.MustCompile(validPath)
+)
 
 type response struct {
 	Message string `json:"message"`
@@ -31,11 +34,10 @@ type handler struct{}
 
 func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	path := r.URL.Path
-	re := regexp.MustCompile(validPath)
 	var message string
 	if path == endpoint {
 		message = worldGreeting
-	} else if re.MatchString(path) {
+	} else if pathRE.MatchString(path) {
 		message = getMessageFromPath(path)
 	} else {
 		http.Error(w, fmt.Sprintf("%s not a valid path. Must be of form %s", path, validPath), http.StatusBadRequest)
