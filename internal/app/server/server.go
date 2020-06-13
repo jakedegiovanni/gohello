@@ -7,11 +7,9 @@ import (
 	"time"
 )
 
-const (
-	methodNotSupportMessage = "%s Operations not support on this endpoint"
-
-	noHandlers = "No handlers supplied"
-	noPort     = "No port supplied"
+var (
+	errNoHandler = errors.New("No handlers supplied")
+	errNoPort    = errors.New("No port supplied")
 )
 
 // HandlerContainerBuilder ...
@@ -34,10 +32,10 @@ type HandlerContainer struct {
 // Build ...
 func Build(port int, containers []HandlerContainer) (*http.Server, error) {
 	if port == 0 {
-		return nil, errors.New(noPort)
+		return nil, errNoPort
 	}
 	if len(containers) == 0 {
-		return nil, errors.New(noHandlers)
+		return nil, errNoHandler
 	}
 
 	handler := newHandler(containers)
