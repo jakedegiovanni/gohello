@@ -2,9 +2,10 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 
-	"github.com/jakedegiovanni/gohello/internal/app"
+	"github.com/jakedegiovanni/gohello/internal/app/di"
 )
 
 const defaultPort = 8080
@@ -24,15 +25,13 @@ var parseFlags = func() *opts {
 func main() {
 	opt := parseFlags()
 
-	containers := app.MakeContainers()
-	builder := app.ServerBuilder()
-	server := app.App{
-		Port:       opt.port,
-		Containers: containers,
-		Builder:    builder,
+	server, err := di.MakeServer(opt.port)
+	if err != nil {
+		log.Fatal(err)
 	}
 
-	if err := server.Start(); err != nil {
+	fmt.Printf("Starting Server on address %s\n", server.Addr)
+	if err = server.ListenAndServe(); err != nil {
 		log.Fatal(err)
 	}
 }

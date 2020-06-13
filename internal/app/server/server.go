@@ -14,10 +14,12 @@ const (
 	noPort     = "No port supplied"
 )
 
-// NotImplemented ...
-func NotImplemented(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusNotImplemented)
-	fmt.Fprintf(w, methodNotSupportMessage, r.Method)
+// HandlerContainerConstructor ...
+type HandlerContainerConstructor func(endpoint string, handler http.Handler) HandlerContainer
+
+// NewHandlerContainer ...
+func NewHandlerContainer(endpoint string, handler http.Handler) HandlerContainer {
+	return HandlerContainer{Endpoint: endpoint, Handler: handler}
 }
 
 // HandlerContainer ...
@@ -26,28 +28,16 @@ type HandlerContainer struct {
 	Handler  http.Handler
 }
 
-// NewBuilder ...
-func NewBuilder() Builder {
-	return &builder{}
-}
-
-// Builder ...
-type Builder interface {
-	Build(port int, containers []HandlerContainer) (*http.Server, error)
-}
-
-type builder struct{}
-
-// NewServer ...
-func (b *builder) Build(port int, containers []HandlerContainer) (*http.Server, error) {
+// Build ...
+func Build(port int, containers []HandlerContainer) (*http.Server, error) {
 	if port == 0 {
 		return nil, errors.New(noPort)
 	}
-
-	handler, err := newHandler(containers)
-	if err != nil {
-		return nil, err
+	if len(containers) == 0 {
+		return nil, errors.New(noHandlers)
 	}
+
+	handler := newHandler(containers)
 
 	return &http.Server{
 		Addr:           fmt.Sprintf(":%d", port),
@@ -58,13 +48,10 @@ func (b *builder) Build(port int, containers []HandlerContainer) (*http.Server, 
 	}, nil
 }
 
-func newHandler(containers []HandlerContainer) (http.Handler, error) {
-	if len(containers) == 0 {
-		return nil, errors.New(noHandlers)
-	}
+func newHandler(containers []HandlerContainer) http.Handler {
 	mux := http.NewServeMux()
 	for _, container := range containers {
 		mux.Handle(container.Endpoint, container.Handler)
 	}
-	return mux, nil
+	return mux
 }
