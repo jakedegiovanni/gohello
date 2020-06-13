@@ -18,9 +18,8 @@ const (
 
 var validPath = endpoint + `[a-z]{1,25}/?$`
 
-// Response ...
-type Response struct {
-	Message string `json:message`
+type response struct {
+	Message string `json:"message"`
 }
 
 // NewHandlerContainer ...
@@ -58,7 +57,7 @@ func getMessageFromPath(path string) (msg string) {
 }
 
 func get(w http.ResponseWriter, message string) {
-	resp := Response{
+	resp := response{
 		Message: message,
 	}
 
