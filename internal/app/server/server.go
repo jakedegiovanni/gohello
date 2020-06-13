@@ -14,6 +14,9 @@ const (
 	noPort     = "No port supplied"
 )
 
+// HandlerContainerBuilder ...
+type HandlerContainerBuilder func(HandlerContainerConstructor) HandlerContainer
+
 // HandlerContainerConstructor ...
 type HandlerContainerConstructor func(endpoint string, handler http.Handler) HandlerContainer
 

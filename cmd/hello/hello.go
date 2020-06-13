@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"net/http"
 
 	"github.com/jakedegiovanni/gohello/internal/app/di"
 )
@@ -22,10 +23,13 @@ var parseFlags = func() *opts {
 	return &opts{port: port}
 }
 
+var createServer = func(opt *opts) (*http.Server, error) {
+	return di.MakeServer(opt.port)
+}
+
 func main() {
 	opt := parseFlags()
-
-	server, err := di.MakeServer(opt.port)
+	server, err := createServer(opt)
 	if err != nil {
 		log.Fatal(err)
 	}
