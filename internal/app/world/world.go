@@ -18,21 +18,19 @@ type response struct {
 }
 
 // NewContainer ...
-func NewContainer(constructor server.ContainerConstructor, shiftPath server.PathShift) server.Container {
+func NewContainer(constructor server.ContainerConstructor) server.Container {
 	return constructor(
 		endpoint,
-		&handler{shiftPath: shiftPath},
+		&handler{},
 	)
 }
 
-type handler struct {
-	shiftPath server.PathShift
-}
+type handler struct{}
 
 func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	// valid paths: "/" , "/:message/"
-	// invalid paths: "/:message/[a-Z]*", "/:message/[a-Z]*/"
-	head, tail := h.shiftPath(r.URL.Path)
+	// valid paths: "/" , "/:message[/]+"
+	// invalid paths: "/:message/[a-Z]*[/]+", "/:message/[a-Z]*"
+	head, tail := server.ShiftPath(r.URL.Path)
 	if tail != "/" {
 		http.NotFound(w, r)
 		return

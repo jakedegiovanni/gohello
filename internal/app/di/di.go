@@ -3,9 +3,8 @@ package di
 import (
 	"net/http"
 
-	"github.com/jakedegiovanni/gohello/internal/app/world"
-
 	"github.com/jakedegiovanni/gohello/internal/app/server"
+	"github.com/jakedegiovanni/gohello/internal/app/world"
 )
 
 // MakeServer ...
@@ -17,6 +16,6 @@ func MakeServer(port int) (*http.Server, error) {
 
 func makeContainers() []server.Container {
 	return []server.Container{
-		world.NewContainer(server.NewContainer, server.ShiftPath),
+		world.NewContainer(server.NewContainer),
 	}
 }
