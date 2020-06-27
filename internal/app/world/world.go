@@ -2,46 +2,47 @@ package world
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
-	"regexp"
-	"strings"
 
 	"github.com/jakedegiovanni/gohello/internal/app/server"
 )
 
 const (
-	endpoint = "/world/"
+	endpoint = "world"
 
 	worldGreeting = "Hello, World."
-)
-
-var (
-	validPath = endpoint + `[a-z]{1,25}/?$`
-	pathRE    = regexp.MustCompile(validPath)
 )
 
 type response struct {
 	Message string `json:"message"`
 }
 
-// NewHandlerContainer ...
-func NewHandlerContainer(constructor server.HandlerContainerConstructor) server.HandlerContainer {
-	return constructor(endpoint, &handler{})
+// NewContainer ...
+func NewContainer(constructor server.ContainerConstructor, shiftPath server.PathShift) server.Container {
+	return constructor(
+		endpoint,
+		&handler{shiftPath: shiftPath},
+	)
 }
 
-type handler struct{}
+type handler struct {
+	shiftPath server.PathShift
+}
 
 func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	path := r.URL.Path
-	var message string
-	if path == endpoint {
-		message = worldGreeting
-	} else if pathRE.MatchString(path) {
-		message = getMessageFromPath(path)
-	} else {
-		http.Error(w, fmt.Sprintf("%s not a valid path. Must be of form %s", path, validPath), http.StatusBadRequest)
+	// valid paths: "/" , "/:message/"
+	// invalid paths: "/:message/[a-Z]*", "/:message/[a-Z]*/"
+	head, tail := h.shiftPath(r.URL.Path)
+	if tail != "/" {
+		http.NotFound(w, r)
 		return
+	}
+
+	var message string
+	if head == "" {
+		message = worldGreeting
+	} else {
+		message = head
 	}
 
 	switch r.Method {
@@ -50,12 +51,6 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	default:
 		http.Error(w, http.StatusText(http.StatusNotImplemented), http.StatusNotImplemented)
 	}
-}
-
-func getMessageFromPath(path string) (msg string) {
-	msg = strings.ReplaceAll(path, endpoint, "")
-	msg = strings.ReplaceAll(msg, "/", "")
-	return
 }
 
 func get(w http.ResponseWriter, message string) {

@@ -4,55 +4,79 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"path"
+	"strings"
 	"time"
 )
 
-var (
-	errNoHandler = errors.New("No handlers supplied")
-	errNoPort    = errors.New("No port supplied")
-)
+var errNoPort = errors.New("No port supplied")
 
-// HandlerContainerBuilder ...
-type HandlerContainerBuilder func(HandlerContainerConstructor) HandlerContainer
+// ContainerConstructor ...
+type ContainerConstructor func(string, http.Handler) Container
 
-// HandlerContainerConstructor ...
-type HandlerContainerConstructor func(endpoint string, handler http.Handler) HandlerContainer
-
-// NewHandlerContainer ...
-func NewHandlerContainer(endpoint string, handler http.Handler) HandlerContainer {
-	return HandlerContainer{Endpoint: endpoint, Handler: handler}
+// NewContainer ...
+func NewContainer(endpoint string, handler http.Handler) Container {
+	return Container{Endpoint: endpoint, Handler: handler}
 }
 
-// HandlerContainer ...
-type HandlerContainer struct {
+// Container ...
+type Container struct {
 	Endpoint string
 	Handler  http.Handler
 }
 
-// Build ...
-func Build(port int, containers []HandlerContainer) (*http.Server, error) {
+// NewFrontController ...
+func NewFrontController(containers ...Container) *FrontController {
+	x := make(map[string]Container)
+	for _, e := range containers {
+		if _, ok := x[e.Endpoint]; ok {
+			panic(fmt.Sprintf("Duplicated top level endpoint found: %s", e.Endpoint))
+		} else {
+			x[e.Endpoint] = e
+		}
+	}
+	return &FrontController{endpoints: x}
+}
+
+// FrontController ...
+type FrontController struct {
+	endpoints map[string]Container
+}
+
+func (f *FrontController) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	var head string
+	head, r.URL.Path = ShiftPath(r.URL.Path)
+	if container, ok := f.endpoints[head]; ok {
+		container.Handler.ServeHTTP(w, r)
+	} else {
+		http.NotFound(w, r)
+	}
+}
+
+// PathShift ...
+type PathShift func(string) (head, tail string)
+
+// ShiftPath https://blog.merovius.de/2017/06/18/how-not-to-use-an-http-router.html
+func ShiftPath(p string) (head, tail string) {
+	p = path.Clean("/" + p)
+	i := strings.Index(p[1:], "/") + 1
+	if i <= 0 {
+		return p[1:], "/"
+	}
+	return p[1:i], p[i:]
+}
+
+// NewServer ...
+func NewServer(port int, frontController *FrontController) (*http.Server, error) {
 	if port == 0 {
 		return nil, errNoPort
 	}
-	if len(containers) == 0 {
-		return nil, errNoHandler
-	}
-
-	handler := newHandler(containers)
 
 	return &http.Server{
 		Addr:           fmt.Sprintf(":%d", port),
-		Handler:        handler,
+		Handler:        frontController,
 		ReadTimeout:    10 * time.Second,
 		WriteTimeout:   10 * time.Second,
 		MaxHeaderBytes: 1 << 20,
 	}, nil
-}
-
-func newHandler(containers []HandlerContainer) http.Handler {
-	mux := http.NewServeMux()
-	for _, container := range containers {
-		mux.Handle(container.Endpoint, container.Handler)
-	}
-	return mux
 }

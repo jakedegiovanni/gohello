@@ -3,24 +3,20 @@ package di
 import (
 	"net/http"
 
-	"github.com/jakedegiovanni/gohello/internal/app/server"
 	"github.com/jakedegiovanni/gohello/internal/app/world"
-)
 
-var containerInitialisers = []server.HandlerContainerBuilder{
-	world.NewHandlerContainer,
-}
+	"github.com/jakedegiovanni/gohello/internal/app/server"
+)
 
 // MakeServer ...
 func MakeServer(port int) (*http.Server, error) {
-	containers := makeContainers(containerInitialisers)
-	return server.Build(port, containers)
+	containers := makeContainers()
+	frontController := server.NewFrontController(containers...)
+	return server.NewServer(port, frontController)
 }
 
-func makeContainers(builders []server.HandlerContainerBuilder) []server.HandlerContainer {
-	var containers []server.HandlerContainer
-	for _, builder := range builders {
-		containers = append(containers, builder(server.NewHandlerContainer))
+func makeContainers() []server.Container {
+	return []server.Container{
+		world.NewContainer(server.NewContainer, server.ShiftPath),
 	}
-	return containers
 }
