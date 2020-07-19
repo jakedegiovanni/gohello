@@ -4,25 +4,23 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/jakedegiovanni/gohello/internal/app/server"
+	"github.com/jakedegiovanni/gohello/internal/app/server/urlutil"
 )
 
 const (
-	endpoint = "world"
+	// Endpoint ...
+	Endpoint = "world"
 
 	worldGreeting = "Hello, World."
 )
 
-type response struct {
-	Message string `json:"message"`
+// Handler ...
+func Handler() http.Handler {
+	return &handler{}
 }
 
-// NewContainer ...
-func NewContainer(constructor server.ContainerConstructor) server.Container {
-	return constructor(
-		endpoint,
-		&handler{},
-	)
+type response struct {
+	Message string `json:"message"`
 }
 
 type handler struct{}
@@ -30,7 +28,7 @@ type handler struct{}
 func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// valid paths: "/" , "/:message[/]+"
 	// invalid paths: "/:message/[a-Z]*[/]+", "/:message/[a-Z]*"
-	head, tail := server.ShiftPath(r.URL.Path)
+	head, tail := urlutil.ShiftPath(r.URL.Path)
 	if tail != "/" {
 		http.NotFound(w, r)
 		return

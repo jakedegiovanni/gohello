@@ -9,13 +9,13 @@ import (
 
 // MakeServer ...
 func MakeServer(port int) (*http.Server, error) {
-	containers := makeContainers()
-	frontController := server.NewFrontController(containers...)
+	handlerMap := makeHandlerMap()
+	frontController := server.NewFrontController(handlerMap)
 	return server.NewServer(port, frontController)
 }
 
-func makeContainers() []server.Container {
-	return []server.Container{
-		world.NewContainer(server.NewContainer),
+func makeHandlerMap() map[string]http.Handler {
+	return map[string]http.Handler{
+		world.Endpoint: world.Handler(),
 	}
 }
