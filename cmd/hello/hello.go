@@ -2,13 +2,14 @@ package main
 
 import (
 	"flag"
+	"fmt"
+	"log"
+	"net/http"
 
-	"github.com/jakedegiovanni/gohello/pkg/server"
+	"github.com/jakedegiovanni/gohello/internal/app/di"
 )
 
-var serverStart = server.Start
-
-var defaultPort = 8080
+const defaultPort = 8080
 
 type opts struct {
 	port int
@@ -22,7 +23,19 @@ var parseFlags = func() *opts {
 	return &opts{port: port}
 }
 
+var createServer = func(opt *opts) (*http.Server, error) {
+	return di.MakeServer(opt.port)
+}
+
 func main() {
 	opt := parseFlags()
-	serverStart(opt.port)
+	server, err := createServer(opt)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Printf("Starting Server on address %s\n", server.Addr)
+	if err = server.ListenAndServe(); err != nil {
+		log.Fatal(err)
+	}
 }
